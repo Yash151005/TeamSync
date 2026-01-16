@@ -19,6 +19,7 @@ const Login = () => {
 
     try {
       await api.post('/auth/send-otp', { email });
+      console.log("login url :",api)
       toast.success('OTP sent to your email!');
       setStep('otp');
     } catch (error) {

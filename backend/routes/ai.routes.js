@@ -158,10 +158,33 @@ router.get('/recommend-teams', authenticate, async (req, res, next) => {
       t.members.length + 1 < t.maxMembers
     );
     
-    const recommendations = await aiService.recommendTeams(
+    const aiRecommendations = await aiService.recommendTeams(
       req.participant,
       availableTeams
     );
+    
+    // Map AI results back to full team objects
+    const recommendations = aiRecommendations.map(rec => {
+      const team = availableTeams.find(t => t._id.toString() === (rec.teamId || '').toString());
+      if (team) {
+        return {
+          team,
+          score: rec.score || 70,
+          reason: rec.reason
+        };
+      }
+      return null;
+    }).filter(rec => rec !== null);
+    
+    // If AI failed to return valid teams, use basic recommendations
+    if (recommendations.length === 0) {
+      const basicRecommendations = availableTeams.slice(0, 3).map((team, index) => ({
+        team,
+        score: Math.max(50, 90 - (index * 10)),
+        reason: `This team is looking for members and has ${team.maxMembers - team.members.length - 1} open spots.`
+      }));
+      return res.json({ recommendations: basicRecommendations });
+    }
     
     res.json({ recommendations });
   } catch (error) {

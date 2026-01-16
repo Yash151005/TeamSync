@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'YOUR_API_KEY
 
 class AIService {
   constructor() {
-    this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
 
   // Generate smart team compatibility analysis
@@ -121,6 +121,7 @@ Create a brief, exciting description (2-3 sentences) that showcases the team's s
   async recommendTeams(participant, availableTeams) {
     try {
       const teamsInfo = availableTeams.slice(0, 5).map(t => ({
+        id: t._id,
         name: t.name,
         size: t.members.length + 1,
         maxMembers: t.maxMembers,
@@ -137,8 +138,8 @@ Participant:
 Available Teams:
 ${JSON.stringify(teamsInfo, null, 2)}
 
-Rank the teams by compatibility (1-5) and explain briefly why each matches.
-Format: [{"teamName": "name", "rank": number, "reason": "text"}]`;
+Rank the teams by compatibility and provide a compatibility score (0-100) and explain briefly why each matches.
+Format: [{"teamId": "id", "score": number, "reason": "text"}]`;
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
@@ -154,8 +155,8 @@ Format: [{"teamName": "name", "rank": number, "reason": "text"}]`;
       }
       
       return availableTeams.slice(0, 3).map(t => ({
-        teamName: t.name,
-        rank: 3,
+        teamId: t._id,
+        score: 75,
         reason: 'Compatible team looking for diverse skills.'
       }));
     } catch (error) {

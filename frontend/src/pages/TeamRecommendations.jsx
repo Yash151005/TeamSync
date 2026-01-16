@@ -121,7 +121,7 @@ const TeamRecommendations = () => {
       <div className="grid gap-6">
         {recommendations.map((rec, index) => (
           <div
-            key={rec.team._id}
+            key={rec.team?._id || index}
             className="card hover:shadow-xl transition-shadow border-2 border-transparent hover:border-primary-200"
           >
             <div className="flex items-start justify-between mb-4">
@@ -130,9 +130,9 @@ const TeamRecommendations = () => {
                   <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-full">
                     #{index + 1} Match
                   </span>
-                  <h3 className="text-2xl font-bold">{rec.team.name}</h3>
+                  <h3 className="text-2xl font-bold">{rec.team?.name || 'Unnamed Team'}</h3>
                 </div>
-                <p className="text-gray-600">{rec.team.description}</p>
+                <p className="text-gray-600">{rec.team?.description || 'No description available'}</p>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-bold text-primary-600">
@@ -155,28 +155,28 @@ const TeamRecommendations = () => {
             <div className="flex items-center space-x-6 text-sm text-gray-600 mb-4">
               <div className="flex items-center space-x-2">
                 <Users className="w-4 h-4" />
-                <span>{rec.team.members.length + 1} / {rec.team.maxMembers} members</span>
+                <span>{(rec.team?.members?.length || 0) + 1} / {rec.team?.maxMembers || 4} members</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Award className="w-4 h-4" />
-                <span>Led by {rec.team.leader.name}</span>
+                <span>Led by {rec.team?.leader?.name || 'Unknown'}</span>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex gap-3">
               <button
-                onClick={() => viewTeamDetails(rec.team._id)}
+                onClick={() => rec.team?._id && viewTeamDetails(rec.team._id)}
                 className="btn-primary flex-1"
               >
                 View Team Details
               </button>
               <button
-                onClick={() => analyzeCompatibility(rec.team)}
-                disabled={analyzingTeam === rec.team._id}
+                onClick={() => rec.team && analyzeCompatibility(rec.team)}
+                disabled={analyzingTeam === rec.team?._id}
                 className="btn-secondary flex items-center space-x-2"
               >
-                {analyzingTeam === rec.team._id ? (
+                {analyzingTeam === rec.team?._id ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Sparkles className="w-4 h-4" />
