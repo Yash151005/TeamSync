@@ -2,26 +2,10 @@ const nodemailer = require('nodemailer');
 
 class EmailService {
   constructor() {
-    // Check if email credentials are provided for real sending
-    const hasCredentials = process.env.EMAIL_USER && process.env.EMAIL_PASSWORD;
-
-    if (hasCredentials) {
-      this.transporter = nodemailer.createTransport({
-        service: process.env.EMAIL_SERVICE || 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD
-        }
-      });
-      this.useFakeEmail = false;
-      console.log('📧 Email service initialized for real delivery');
-    } else {
-      // DON'T create a transporter for fake emails - just log to console
-      this.transporter = null;
-      this.useFakeEmail = true;
-      console.log('📧 Email service in testing mode (OTP will show in console only)');
-      console.log('⚠️  No EMAIL_USER or EMAIL_PASSWORD found - emails will be logged only');
-    }
+    // Force testing mode - log to console instead of sending real emails
+    this.transporter = null;
+    this.useFakeEmail = true;
+    console.log('📧 Email service in testing mode (OTP will show in console only)');
   }
 
   async sendOTP(email, otp) {
@@ -271,7 +255,7 @@ class EmailService {
     };
 
     try {
-      await this.transporter.sendMail(mailOptions);
+      // await this.transporter.sendMail(mailOptions);
       return { success: true };
     } catch (error) {
       console.error('Email sending error:', error);
@@ -529,7 +513,7 @@ class EmailService {
     };
 
     try {
-      await this.transporter.sendMail(mailOptions);
+      // await this.transporter.sendMail(mailOptions);
       return { success: true };
     } catch (error) {
       console.error('Email sending error:', error);
