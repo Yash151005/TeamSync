@@ -3,7 +3,6 @@ const nodemailer = require('nodemailer');
 class EmailService {
   constructor() {
     // Check if email credentials are provided for real sending
-    const isProd = process.env.NODE_ENV === 'production';
     const hasCredentials = process.env.EMAIL_USER && process.env.EMAIL_PASSWORD;
 
     if (hasCredentials) {
@@ -17,24 +16,26 @@ class EmailService {
       this.useFakeEmail = false;
       console.log('📧 Email service initialized for real delivery');
     } else {
-      // Use fake SMTP for testing (emails won't actually send)
-      this.transporter = nodemailer.createTransport({
-        host: 'localhost',
-        port: 1025,
-        secure: false,
-        ignoreTLS: true,
-        tls: {
-          rejectUnauthorized: false
-        }
-      });
-      
-      // Log to console instead of sending real emails
+      // DON'T create a transporter for fake emails - just log to console
+      this.transporter = null;
       this.useFakeEmail = true;
-      console.log('📧 Email service in testing mode (OTP will show in console)');
+      console.log('📧 Email service in testing mode (OTP will show in console only)');
+      console.log('⚠️  No EMAIL_USER or EMAIL_PASSWORD found - emails will be logged only');
     }
   }
 
   async sendOTP(email, otp) {
+    // For testing: just log the OTP to console instead of sending email
+    if (this.useFakeEmail) {
+      console.log('\n📧 ===== FAKE EMAIL (Testing Mode) =====');
+      console.log(`To: ${email}`);
+      console.log(`Subject: TeamSync - Your OTP Code`);
+      console.log(`OTP: ${otp}`);
+      console.log(`Expires in: ${process.env.OTP_EXPIRY_MINUTES || 10} minutes`);
+      console.log('========================================\n');
+      return { success: true, message: 'OTP logged to console (testing mode)' };
+    }
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -270,17 +271,6 @@ class EmailService {
     };
 
     try {
-      // For testing: just log the OTP to console instead of sending email
-      if (this.useFakeEmail) {
-        console.log('\n📧 ===== FAKE EMAIL (Testing Mode) =====');
-        console.log(`To: ${email}`);
-        console.log(`Subject: TeamSync - Your OTP Code`);
-        console.log(`OTP: ${otp}`);
-        console.log(`Expires in: ${process.env.OTP_EXPIRY_MINUTES || 10} minutes`);
-        console.log('========================================\n');
-        return { success: true };
-      }
-      
       await this.transporter.sendMail(mailOptions);
       return { success: true };
     } catch (error) {
@@ -290,6 +280,18 @@ class EmailService {
   }
 
   async sendTeamInvite(email, teamName, inviterName, message) {
+    // For testing: just log the invite to console instead of sending email
+    if (this.useFakeEmail) {
+      console.log('\n📧 ===== FAKE EMAIL (Testing Mode) =====');
+      console.log(`To: ${email}`);
+      console.log(`Subject: TeamSync - Team Invite from ${teamName}`);
+      console.log(`Team: ${teamName}`);
+      console.log(`Invited by: ${inviterName}`);
+      if (message) console.log(`Message: ${message}`);
+      console.log('========================================\n');
+      return { success: true, message: 'Invite logged to console (testing mode)' };
+    }
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -527,18 +529,6 @@ class EmailService {
     };
 
     try {
-      // For testing: just log the invite to console instead of sending email
-      if (this.useFakeEmail) {
-        console.log('\n📧 ===== FAKE EMAIL (Testing Mode) =====');
-        console.log(`To: ${email}`);
-        console.log(`Subject: TeamSync - Team Invite from ${teamName}`);
-        console.log(`Team: ${teamName}`);
-        console.log(`Invited by: ${inviterName}`);
-        if (message) console.log(`Message: ${message}`);
-        console.log('========================================\n');
-        return { success: true };
-      }
-      
       await this.transporter.sendMail(mailOptions);
       return { success: true };
     } catch (error) {
