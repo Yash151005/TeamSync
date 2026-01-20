@@ -21,6 +21,11 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+// ===== CRITICAL: Enable trust proxy for Render/Cloud platforms =====
+// This must be set BEFORE any middleware that uses req.ip
+// Fixes express-rate-limit X-Forwarded-For header error
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(mongoSanitize());
@@ -53,7 +58,8 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV 
+    environment: process.env.NODE_ENV,
+    ip: req.ip // This will now correctly show the real client IP
   });
 });
 
@@ -65,6 +71,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📝 Environment: ${process.env.NODE_ENV}`);
+  console.log(`🔒 Trust proxy enabled: ${app.get('trust proxy')}`);
 });
 
 module.exports = app;
