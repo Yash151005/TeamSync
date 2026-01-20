@@ -2,19 +2,36 @@ const nodemailer = require('nodemailer');
 
 class EmailService {
   constructor() {
-    // Use fake SMTP for testing (emails won't actually send)
-    this.transporter = nodemailer.createTransport({
-      host: 'localhost',
-      port: 1025,
-      secure: false,
-      ignoreTLS: true,
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
-    
-    // Log to console instead of sending real emails
-    this.useFakeEmail = true;
+    // Check if email credentials are provided for real sending
+    const isProd = process.env.NODE_ENV === 'production';
+    const hasCredentials = process.env.EMAIL_USER && process.env.EMAIL_PASSWORD;
+
+    if (hasCredentials) {
+      this.transporter = nodemailer.createTransport({
+        service: process.env.EMAIL_SERVICE || 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD
+        }
+      });
+      this.useFakeEmail = false;
+      console.log('📧 Email service initialized for real delivery');
+    } else {
+      // Use fake SMTP for testing (emails won't actually send)
+      this.transporter = nodemailer.createTransport({
+        host: 'localhost',
+        port: 1025,
+        secure: false,
+        ignoreTLS: true,
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+      
+      // Log to console instead of sending real emails
+      this.useFakeEmail = true;
+      console.log('📧 Email service in testing mode (OTP will show in console)');
+    }
   }
 
   async sendOTP(email, otp) {
